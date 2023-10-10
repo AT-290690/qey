@@ -188,7 +188,7 @@ export const copyTable = ([cols, ...rows]) => {
 const isIterable = obj =>
   obj != null && typeof obj[Symbol.iterator] === 'function';
 export const executeSQL = (sql = editor.getValue(), compile = 0) => {
-  // editor.setSize(window.innerWidth, window.innerHeight);
+  editor.setSize(window.innerWidth, window.innerHeight);
   tableContainer.style.display = 'none';
   tableContainer.innerHTML = '';
   emptyImage.style.display = 'none';

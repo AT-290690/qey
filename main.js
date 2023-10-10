@@ -1,5 +1,5 @@
 import { CodeMirror } from './libs/editor/wisp.editor.bundle.js';
-import { printErrors, executeSQL, copyTable } from './driver.js';
+import { printErrors, executeSQL } from './driver.js';
 export const consoleElement = document.getElementById('console');
 export const tableContainer = document.getElementById('table-container');
 export const editorContainer = document.getElementById('editor-container');
