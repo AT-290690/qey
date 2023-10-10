@@ -18,15 +18,15 @@
 (Array sequance (scan sequance fibonacci))
 ```
 
-Embark on a transformative coding experience with Qeq, an advanced environment meticulously crafted for Lisp enthusiasts. Discover the art of elegant Lisp programming in a user-friendly browser interface, where your creativity knows no limits.
+Embark on a transformative coding experience with Qey, an advanced environment meticulously crafted for Lisp enthusiasts. Discover the art of elegant Lisp programming in a user-friendly browser interface, where your creativity knows no limits.
 
 Key Features:
 
-🚀 Effortless Browser-Based Lisp Programming: Qeq streamlines the process of writing Lisp programs, offering a smooth and intuitive interface accessible directly from your browser. Experience the unparalleled convenience of coding without the hassle of installations or setups.
+🚀 Effortless Browser-Based Lisp Programming: Qey streamlines the process of writing Lisp programs, offering a smooth and intuitive interface accessible directly from your browser. Experience the unparalleled convenience of coding without the hassle of installations or setups.
 
-📊 Dynamic Sheet Creation and CSV Export: Elevate your data visualization game with Qeq's robust capabilities. Craft intricate tables and visual representations with ease, and seamlessly export them into professional-grade CSV files. Qeq ensures your data speaks volumes, making your insights impactful and visually compelling.
+📊 Dynamic Sheet Creation and CSV Export: Elevate your data visualization game with Qey's robust capabilities. Craft intricate tables and visual representations with ease, and seamlessly export them into professional-grade CSV files. Qey ensures your data speaks volumes, making your insights impactful and visually compelling.
 
-🔗 Secure and Collaborative Code Sharing: Foster collaboration effortlessly by sharing your Lisp programs securely via unique, shareable links. Qeq promotes a collaborative ecosystem where ideas flourish, enabling professionals to engage, refine, and expand their knowledge base collectively.
+🔗 Secure and Collaborative Code Sharing: Foster collaboration effortlessly by sharing your Lisp programs securely via unique, shareable links. Qey promotes a collaborative ecosystem where ideas flourish, enabling professionals to engage, refine, and expand their knowledge base collectively.
 
 ```lisp
 (import std "map" "scan" "array-in-bounds?" "deep-flat" "for-each" "find" "index-of" "select" "except" "any?" "reduce")
