@@ -27,21 +27,9 @@
               dy (+ (car dir) y)
               dx (+ (car (cdr dir)) x))
           (+ sum (when (and (array-in-bounds? array dy) (array-in-bounds? (get array dy) dx)) (callback (get (get array dy) dx) dir))))) 0))
-      ; join
-      (deftype join (Lambda (Or (Array)) (Or (String)) (Or (String))))
-      (defun join array delim (reduce array (lambda a x i . (if (> i 0) (concatenate a delim (type x String)) (type x String))) ""))
       ; repeat
       (deftype repeat (Lambda (Or (Number)) (Or (Function)) (Or (Array))))
       (defun repeat n fn (map (Array n length) (lambda . . . (fn))))
-      ; split-by-lines
-      (deftype split-by-lines (Lambda (Or (String)) (Or (Array (String)))))
-      (defun split-by-lines string (regex-match string "[^\n]+"))
-      ; split-by
-      (deftype split-by (Lambda (Or (String)) (Or (String)) (Or (Array (String)))))
-      (defun split-by string delim (regex-match string (concatenate "[^" delim "]+")))
-      ; trim
-      (deftype trim (Lambda (Or (String)) (Or (String))))
-      (defun trim string (regex-replace string "^ +| +$" ""))
       ; array-of-numbers
       (deftype array-of-numbers (Lambda (Or (Array)) (Or (Array (Number)))))
       (defun array-of-numbers array (map array (lambda x . . (type x Number))))
@@ -59,8 +47,7 @@
         (set array1 (length array1) (get array2 i))
         (if (< i bounds) 
           (iterate (+ i 1) bounds)
-        array1
-        )))
+        array1)))
       (iterate 0 (- (length array2) 1))))
       ; map
       (deftype map (Lambda (Or (Array)) (Or (Function)) (Or (Array))))
@@ -78,6 +65,27 @@
           (callback (get array i) i array)
           (if (< i bounds) (iterate (+ i 1) bounds) array)))
         (iterate 0 (- (length array) 1))))
+      ; for-each-rev
+      (deftype for-each-rev (Lambda (Or (Array)) (Or (Function)) (Or (Array) (Number) (Integer) (String) (Function))))
+      (defun for-each-rev array callback (do
+        (loop defun iterate i bounds (do
+          (callback (get array i) i array)
+          (if (> i bounds) (iterate (- i 1) bounds) array)))
+        (iterate (- (length array) 1) 0)))
+     ; for-of
+      (deftype for-of (Lambda (Or (Array)) (Or (Function)) (Or (Array) (Number) (Integer) (String) (Function))))
+      (defun for-of array callback (do
+        (loop defun iterate i bounds (do
+          (callback (get array i))
+          (if (< i bounds) (iterate (+ i 1) bounds) array)))
+        (iterate 0 (- (length array) 1))))
+       ; for-of-rev
+      (deftype for-of-rev (Lambda (Or (Array)) (Or (Function)) (Or (Array) (Number) (Integer) (String) (Function))))
+      (defun for-of-rev array callback (do
+        (loop defun iterate i bounds (do
+          (callback (get array i))
+          (if (> i bounds) (iterate (- i 1) bounds) array)))
+        (iterate (- (length array) 1) 0)))
   ; for-n
   (deftype for-n (Lambda (Or (Number)) (Or (Function)) (Or (Array) (Number) (Integer) (String) (Function))))
   (defun for-n N callback (do
@@ -404,92 +412,6 @@
       ; order-array
       (deftype order-array (Lambda (Or (Array)) (Or (Array (Number))) (Or (Array))))
       (defun order-array array order (map (Array (length array) length) (lambda . i . (get array (get order i)))))
-     
-      (deftype left-pad (Lambda (Or (String)) (Or (Number)) (Or (String)) (Or (String))))
-      (defun left-pad str n ch (do 
-        (setf n (- n (length str)))
-        (loop defun pad i str (if (< i n) (pad (+ i 1) (setf str (concatenate ch str))) str))
-        (pad 0 str)))
-        ; left-pad
-      (deftype right-pad (Lambda (Or (String)) (Or (Number)) (Or (String)) (Or (String))))
-      (defun right-pad str n ch (do 
-        (setf n (- n (length str)))
-        (loop defun pad i str (if (< i n) (pad (+ i 1) (setf str (concatenate str ch))) str))
-        (pad 0 str)))
-      ; occurances_count
-      (deftype character-occurances-in-string (Lambda (Or (String)) (Or (String)) (Or (Number))))
-      (defun character-occurances-in-string string letter (do
-        (defvar 
-          array (type string Array)
-          bitmask 0
-          zero (char-code "a" 0)
-          count 0
-          has-at-least-one 0)
-        (loop defun iterate i bounds  (do
-            (defconstant 
-              ch (get array i)
-              code (- (char-code ch 0) zero)
-              mask (<< 1 code))
-            (if (and (when (= ch letter) (boole has-at-least-one 1))
-                (not (= (& bitmask mask) 0))) 
-                (setf count (+ count 1))
-                (setf bitmask (| bitmask mask)))
-            (if (< i bounds) (iterate (+ i 1) bounds) 
-            (+ count has-at-least-one))))
-            (iterate 0 (- (length array) 1))))
-    ;  to-upper-case
-    (deftype to-upper-case (Lambda (Or (String)) (Or (String))))
-    (defun to-upper-case str (do
-     (defconstant 
-            arr (Array) 
-            n (length str))
-      (loop defun iter i (if (< i n) (do 
-        (defconstant current-char (char-code str i))
-        (set arr i 
-          (if (and (>= current-char 97) (<= current-char 122))
-            (- current-char 32)
-            current-char
-        ))
-        (iter (+ i 1))) 
-        (make-string arr)))
-        (iter 0)))
-    ;  to-lower-case
-    (deftype to-lower-case (Lambda (Or (String)) (Or (String))))
-    (defun to-lower-case str (do
-      (defconstant 
-            arr (Array) 
-            n (length str))
-      (loop defun iter i (if (< i n) (do 
-        (defconstant current-char (char-code str i))
-        (set arr i 
-          (if (and (>= current-char 65) (<= current-char 90))
-            (+ current-char 32)
-            current-char
-        ))
-        (iter (+ i 1))) 
-        (make-string arr)))
-        (iter 0)))
-    ; split-by-n-lines
-    (deftype split-by-n-lines (Lambda (Or (String)) (Or (Number)) (Or (Array (Array (String))))))
-    (defun split-by-n-lines string n (go string (regex-replace (concatenate "(\n){" (type n String) "}") "௮") (regex-match "[^௮]+") (map (lambda x . . (regex-match x "[^\n]+")))))
-    ; split
-    (deftype split (Lambda (Or (String)) (Or (String)) (Or (Array (String)))))
-    (defun split string separator (do
-        (defconstant 
-          sep-arr (type separator Array)
-          array (type string Array)
-          skip (length sep-arr))
-        (defvar cursor "")
-        (loop defun iterate result i bounds
-          (if (< (if (every? sep-arr (lambda y j . (or (<= (length array) (+ i j)) (= (get array (+ i j)) y))))
-                (do 
-                  (setf i (+ i skip -1))
-                  (set result (length result) cursor)
-                  (setf cursor "")
-                  i)
-                (do (setf cursor (concatenate cursor (get array i))) i)) bounds) 
-                    (iterate result (+ i 1) bounds) result))
-        (set (defconstant iteration-result (iterate (Array) 0 (- (length array) 1))) (length iteration-result) cursor)))
       ; slice 
       (deftype slice (Lambda (Or (Array)) (Or (Number)) (Or (Number)) (Or (Array))))
       (defun slice array start end (do 
@@ -501,6 +423,7 @@
                 (iterate (+ i 1)))
               out))
               (iterate 0)))
+      ; clone
       (deftype clone (Lambda (Or (Array)) (Or (Array))))
       (defun clone array (do 
       (defconstant 
@@ -533,6 +456,16 @@
       (and (Array? a) 
             (= (length a) (length b)) 
               (not (some? a (lambda . i . (not (equal? (get a i) (get b i)))))))))
+    ; adjacent-difference
+    (deftype adjacent-difference (Lambda (Or (Array (Number)) (Array (String)) (Array (Array))) (Or (Function)) (Or (Array (Number)) (Array (String)) (Array (Array)))))
+    (defun adjacent-difference array callback (do 
+      (defconstant len (length array))
+      (unless (= len 1) 
+        (do (defconstant result (Array (car array)))
+        (loop defun iterate i (if (< i len) (do 
+        (set result i (callback (get array (- i 1)) (get array i)))
+        (iterate (+ i 1))) result))
+        (iterate 1)) array)))
     (Array 
       (Array "push!" push!)
       (Array "pop!" pop!)
@@ -540,12 +473,6 @@
       (Array "sort-by-length" sort-by-length)  
       (Array "order-array" order-array)  
       (Array "array-in-bounds?" array-in-bounds?)  
-      (Array "join" join)
-      (Array "trim" trim)
-      (Array "split-by-lines" split-by-lines)
-      (Array "split-by" split-by)
-      (Array "split-by-n-lines" split-by-n-lines)
-      (Array "split" split)
       (Array "array-of-numbers" array-of-numbers)
       (Array "concat" concat)
       (Array "merge" merge)
@@ -564,7 +491,6 @@
       (Array "quick-sort" quick-sort)
       (Array "reverse" reverse)
       (Array "binary-search" binary-search)
-      (Array "character-occurances-in-string" character-occurances-in-string)
       (Array "every?" every?)
       (Array "some?" some?)
       (Array "index-of" index-of)
@@ -582,15 +508,11 @@
       (Array "neighborhood" neighborhood)
       (Array "repeat" repeat)
       (Array "window" window)
-      (Array "left-pad" left-pad)
-      (Array "right-pad" right-pad)
-      (Array "to-upper-case" to-upper-case)
-      (Array "to-lower-case" to-lower-case)
       (Array "cartesian-product" cartesian-product)
       (Array "repeated-apply" repeated-apply)
       (Array "iteration" iteration)
-      (Array "empty!" empty!)
       (Array "clone" clone)
+      (Array "empty!" empty!)
       (Array "empty?" empty?)
       (Array "take" take)
       (Array "zip" zip)
@@ -600,5 +522,9 @@
       (Array "any?" any?)
       (Array "all?" all?)
       (Array "number-of" number-of)
+      (Array "for-of" for-of)
+      (Array "adjacent-difference" adjacent-difference)
+      (Array "for-of-rev" for-of-rev)
+      (Array "for-each-rev" for-each-rev)
   )))
 ; (/ std lib)

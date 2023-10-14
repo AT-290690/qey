@@ -1,11 +1,5 @@
 import { APPLY, ATOM, TYPE, VALUE, WORD } from './enums.js'
-import {
-  handleUnbalancedParens,
-  handleUnbalancedQuotes,
-  removeNoCode,
-} from './utils.js'
 export const parse = (source) => {
-  source = handleUnbalancedQuotes(handleUnbalancedParens(removeNoCode(source)))
   const tree = []
   let head = tree,
     stack = [tree],

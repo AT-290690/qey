@@ -65,7 +65,9 @@ export const runFromCompiled = (
   Extensions = {},
   helpers = {}
 ) => {
-  const tree = parse(source)
+  const tree = parse(
+    handleUnbalancedQuotes(handleUnbalancedParens(removeNoCode(source)))
+  )
   if (Array.isArray(tree)) {
     const compiled = compileToJs(tree, Extensions, helpers)
     const DEPS = topLevel.length
@@ -76,6 +78,12 @@ export const runFromCompiled = (
   }
 }
 export const runFromInterpreted = (source, topLevel = [], env = {}) => {
-  const tree = topLevel.flat(1).concat(parse(source))
+  const tree = topLevel
+    .flat(1)
+    .concat(
+      parse(
+        handleUnbalancedQuotes(handleUnbalancedParens(removeNoCode(source)))
+      )
+    )
   if (Array.isArray(tree)) return run(tree, env)
 }

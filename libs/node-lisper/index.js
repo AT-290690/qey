@@ -10,12 +10,14 @@ import {
   treeShake,
 } from './src/utils.js'
 import STD from './lib/baked/std.js'
+import STR from './lib/baked/str.js'
 import MATH from './lib/baked/math.js'
 import DS from './lib/baked/ds.js'
 import { tokens } from './src/tokeniser.js'
 import { format } from './src/formatter.js'
 const libraries = {
   std: STD,
+  str: STR,
   math: MATH,
   ds: DS,
 }
@@ -28,8 +30,9 @@ export default {
   tokens,
   evaluate,
   balance: isBalancedParenthesis,
-  source: removeNoCode,
+  quotes: handleUnbalancedQuotes,
+  code: removeNoCode,
   run,
   libraries,
-  treeShake,
+  shake: treeShake,
 }

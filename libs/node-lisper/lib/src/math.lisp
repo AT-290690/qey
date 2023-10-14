@@ -119,6 +119,9 @@
             g
             (sqrt-iter (improve-guess g x) x)))
   (sqrt-iter 1.0 x)))
+  ; hypotenuse 
+  (deftype hypotenuse (Lambda (Or (Number)) (Or (Number)) (Or (Number))))
+  (defun hypotenuse a b (sqrt (+ (* a a) (* b b))))
   ; can-sum?
   (deftype can-sum? (Lambda (Or (Number)) (Or (Array (Number))) (Or (Boolean))))
   (defun can-sum? t values 
@@ -568,6 +571,7 @@
       (Array "sub-days" sub-days)
       (Array "sub-months" sub-months)
       (Array "sub-years" sub-years)
+      (Array "hypotenuse" hypotenuse)
    )
 ))
 ; (/ math lib)

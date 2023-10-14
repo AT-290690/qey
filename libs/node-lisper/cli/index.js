@@ -7,16 +7,29 @@ import { format } from '../src/formatter.js'
 import fsExtension from '../lib/extensions/fs.js'
 import dateExtension from '../lib/extensions/date.js'
 // import wabt from 'wabt'
-import { logError, removeNoCode, treeShake } from '../src/utils.js'
+import {
+  handleUnbalancedParens,
+  handleUnbalancedQuotes,
+  logError,
+  removeNoCode,
+  treeShake,
+} from '../src/utils.js'
 import STD from '../lib/baked/std.js'
+import STR from '../lib/baked/str.js'
 import MATH from '../lib/baked/math.js'
 import DS from '../lib/baked/ds.js'
 const libraries = {
   std: STD,
+  str: STR,
   math: MATH,
   ds: DS,
 }
-const libs = [...libraries['std'], ...libraries['math'], ...libraries['ds']]
+const libs = [
+  ...libraries['std'],
+  ...libraries['str'],
+  ...libraries['math'],
+  ...libraries['ds'],
+]
 import { APPLY, TYPE, VALUE, WORD } from '../src/enums.js'
 export default async () => {
   const [, , ...argv] = process.argv
@@ -45,7 +58,9 @@ export default async () => {
         break
       case '-c':
         {
-          const tree = parse(file)
+          const tree = parse(
+            handleUnbalancedQuotes(handleUnbalancedParens(removeNoCode(file)))
+          )
           if (Array.isArray(tree)) {
             const { top, program, deps } = compileToJs(
               tree,
@@ -88,14 +103,29 @@ export default async () => {
         break
       case '-p':
         try {
-          run(parse(file), env)
+          run(
+            parse(
+              handleUnbalancedQuotes(handleUnbalancedParens(removeNoCode(file)))
+            ),
+            env
+          )
         } catch (err) {
           logError(err.message)
         }
         break
       case '-r':
         try {
-          run([...libs, ...parse(file)], env)
+          run(
+            [
+              ...libs,
+              ...parse(
+                handleUnbalancedQuotes(
+                  handleUnbalancedParens(removeNoCode(file))
+                )
+              ),
+            ],
+            env
+          )
         } catch (err) {
           logError('Error')
           logError(err.message)
@@ -109,7 +139,17 @@ export default async () => {
         break
       case '-trace':
         try {
-          run([...libs, ...parse(file)], env)
+          run(
+            [
+              ...libs,
+              ...parse(
+                handleUnbalancedQuotes(
+                  handleUnbalancedParens(removeNoCode(file))
+                )
+              ),
+            ],
+            env
+          )
         } catch (err) {
           console.log('\x1b[40m', err, '\x1b[0m')
           logError(err.message)
@@ -145,7 +185,9 @@ export default async () => {
         }
         break
       case '-format':
-        const tree = parse(file)
+        const tree = parse(
+          handleUnbalancedQuotes(handleUnbalancedParens(removeNoCode(file)))
+        )
         if (Array.isArray(tree)) {
           writeFileSync(path, format(tree), 'utf-8')
         }
@@ -189,7 +231,17 @@ export default async () => {
               if (!input || input[0] === ';') return
               try {
                 let out = `${source}\n${file}\n(do ${input})`
-                const result = run([...libs, ...parse(out)], env)
+                const result = run(
+                  [
+                    ...libs,
+                    ...parse(
+                      handleUnbalancedQuotes(
+                        handleUnbalancedParens(removeNoCode(out))
+                      )
+                    ),
+                  ],
+                  env
+                )
                 if (typeof result === 'function') {
                   console.log(inpColor, `(λ)`)
                 } else if (Array.isArray(result)) {

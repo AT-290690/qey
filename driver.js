@@ -1,18 +1,30 @@
 import { compileToJs } from './libs/node-lisper/src/compiler.js';
 import { evaluate, run } from './libs/node-lisper/src/interpreter.js';
-import { treeShake } from './libs/node-lisper/src/utils.js';
+import {
+  handleUnbalancedParens,
+  handleUnbalancedQuotes,
+  removeNoCode,
+  treeShake
+} from './libs/node-lisper/src/utils.js';
 import { parse } from './libs/node-lisper/src/parser.js';
 import std from './libs/node-lisper/lib/baked/std.js';
 import math from './libs/node-lisper/lib/baked/math.js';
 import ds from './libs/node-lisper/lib/baked/ds.js';
+import str from './libs/node-lisper/lib/baked/str.js';
 import { consoleElement, editor, emptyImage, tableContainer } from './main.js';
 import { APPLY, TYPE, VALUE, WORD } from './libs/node-lisper/src/enums.js';
 const libraries = {
   std,
   math,
-  ds
+  ds,
+  str
 };
-const libs = [...libraries['std'], ...libraries['math'], ...libraries['ds']];
+const libs = [
+  ...libraries['std'],
+  ...libraries['math'],
+  ...libraries['ds'],
+  ...libraries['str']
+];
 const ENV = {
   ['follow']: (args, env) => {
     const link = evaluate(args[0], env);
@@ -57,6 +69,44 @@ const ENV = {
     );
     return [['String'], [decompressed]];
   },
+  ['dump']: (args, env) => {
+    const t = evaluate(args[0], env);
+    if (isIterable(t)) {
+      editor.setSize(window.innerWidth, window.innerHeight);
+      tableContainer.style.display = 'none';
+      tableContainer.innerHTML = '';
+      emptyImage.style.display = 'none';
+      consoleElement.textContent = '';
+      // consoleElement.classList.add('info_line');
+      // consoleElement.classList.remove('error_line');
+
+      const table = document.createElement('table');
+      let tr = table.insertRow(-1);
+      const [cols, ...rows] = t;
+      if (!rows.length) {
+        emptyImage.style.display = 'block';
+        return editor.setSize(window.innerWidth, window.innerHeight / 2);
+      }
+
+      cols.forEach(key => {
+        const th = document.createElement('th');
+        th.innerHTML = key;
+        tr.appendChild(th);
+      });
+
+      for (let i = 0; i < rows.length; i++) {
+        tr = table.insertRow(-1);
+        for (let j = 0; j < cols.length; j++) {
+          // console.log(rows[i][j]);
+          const tabCell = tr.insertCell(-1);
+          tabCell.innerHTML = rows[i][j];
+        }
+      }
+      tableContainer.appendChild(table);
+      tableContainer.style.display = 'block';
+      editor.setSize(window.innerWidth - 15, window.innerHeight / 2);
+    }
+  },
   ['copy']: (args, env) => {
     if (args.length !== 1)
       throw new RangeError(
@@ -85,6 +135,43 @@ const ENV = {
     downloadCSVFile(table.map(x => x.join(',')).join('\n'), name);
     return table;
   },
+  ['println']: (args, env) => {
+    editor.setSize(window.innerWidth, window.innerHeight);
+    tableContainer.style.display = 'none';
+    tableContainer.innerHTML = '';
+    emptyImage.style.display = 'none';
+    consoleElement.textContent = '';
+    const res = evaluate(args[0], env);
+    const table = document.createElement('pre');
+    table.style.textAlign = 'center';
+    table.style.whiteSpace = 'pre-wrap';
+    table.style.overflowWrap = 'break-word';
+    table.textContent = JSON.stringify(res, (_, value) => {
+      switch (typeof value) {
+        case 'bigint':
+          return Number(value);
+        case 'function':
+          return 'λ';
+        case 'undefined':
+        case 'symbol':
+          return 0;
+        case 'boolean':
+          return +value;
+        default:
+          return value;
+      }
+    })
+      .replace(new RegExp(/\[/g), '(')
+      .replace(new RegExp(/\]/g), ')')
+      .replace(new RegExp(/\,/g), ' ')
+      .replace(new RegExp(/"λ"/g), 'λ');
+
+    tableContainer.appendChild(table);
+    tableContainer.style.display = 'block';
+
+    editor.setSize(window.innerWidth - 15, window.innerHeight / 2);
+    return;
+  },
   ['doc']: (args, env) => {
     if (args.length !== 1)
       throw new RangeError('Invalid number of arguments to (doc) [1 required]');
@@ -112,7 +199,7 @@ const ENV = {
             .map(x => x[VALUE])
             .join(' ')
             .trimRight(),
-          rest.length
+          rest.length - 1
         ]);
         return acc;
       },
@@ -128,7 +215,9 @@ export const printErrors = errors => {
   consoleElement.style.display = 'block';
 };
 const compileAndEval = source => {
-  const tree = parse(source);
+  const tree = parse(
+    handleUnbalancedQuotes(handleUnbalancedParens(removeNoCode(source)))
+  );
   if (Array.isArray(tree)) {
     const { top, program, deps } = compileToJs(tree);
 
@@ -147,7 +236,17 @@ const execute = (source, compile = 0) => {
     if (!source.trim()) return;
     const result = compile
       ? compileAndEval(source)
-      : run([...libs, ...parse(source)], ENV);
+      : run(
+          [
+            ...libs,
+            ...parse(
+              handleUnbalancedQuotes(
+                handleUnbalancedParens(removeNoCode(source))
+              )
+            )
+          ],
+          ENV
+        );
     // droneButton.classList.remove('shake');
     // errorIcon.style.visibility = 'hidden';
     // droneIntel(execIcon);
@@ -188,44 +287,8 @@ export const copyTable = ([cols, ...rows]) => {
 const isIterable = obj =>
   obj != null && typeof obj[Symbol.iterator] === 'function';
 export const executeSQL = (sql = editor.getValue(), compile = 0) => {
-  editor.setSize(window.innerWidth, window.innerHeight);
-  tableContainer.style.display = 'none';
-  tableContainer.innerHTML = '';
-  emptyImage.style.display = 'none';
-  consoleElement.textContent = '';
-  // consoleElement.classList.add('info_line');
-  // consoleElement.classList.remove('error_line');
-
-  const table = document.createElement('table');
-  let tr = table.insertRow(-1);
-  let Rows = [[], []];
-
   try {
-    Rows = execute(sql, compile);
-    if (!isIterable(Rows)) return [];
-    const [cols, ...rows] = Rows;
-    if (!Array.isArray(cols) || !rows.length) {
-      emptyImage.style.display = 'block';
-      return editor.setSize(window.innerWidth, window.innerHeight / 2);
-    }
-
-    cols.forEach(key => {
-      const th = document.createElement('th');
-      th.innerHTML = key;
-      tr.appendChild(th);
-    });
-
-    for (let i = 0; i < rows.length; i++) {
-      tr = table.insertRow(-1);
-      for (let j = 0; j < cols.length; j++) {
-        // console.log(rows[i][j]);
-        const tabCell = tr.insertCell(-1);
-        tabCell.innerHTML = rows[i][j];
-      }
-    }
-    tableContainer.appendChild(table);
-    tableContainer.style.display = 'block';
-    editor.setSize(window.innerWidth - 15, window.innerHeight / 2);
+    execute(sql, compile);
   } catch (err) {
     printErrors(err);
   }
